@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 from dotenv import load_dotenv
 import os
@@ -6,11 +7,9 @@ from agents import AGENT_META, run_agent
 load_dotenv()
 
 def _get_api_key() -> str:
-    # Local: read from .env
     key = os.getenv("ANTHROPIC_API_KEY", "")
     if key:
         return key
-    # Streamlit Cloud: read from st.secrets
     try:
         return st.secrets.get("ANTHROPIC_API_KEY", "")
     except Exception:
@@ -32,23 +31,25 @@ if "histories" not in st.session_state:
 if "active_agent" not in st.session_state:
     st.session_state.active_agent = "master-agent"
 if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
+    st.session_state.dark_mode = True
 
 dark = st.session_state.dark_mode
 
 # ── Theme vars ────────────────────────────────────────────────────────────────
 if dark:
     css_vars = """
-    --green:       #2eaa0e;
-    --green2:      #38cc10;
+    --green:       #2ecc40;
+    --green2:      #38d44a;
     --white:       #e8f5e3;
-    --bg:          #111612;
-    --surface:     #1a2118;
-    --border:      #2a3d24;
+    --bg:          #061510;
+    --surface:     #0a1c11;
+    --border:      #163324;
     --text:        #e8f5e3;
-    --text-muted:  #7a9870;
-    --bubble-agent-bg:   #1e2b1a;
+    --text-muted:  #6b9e7a;
+    --placeholder: #4e7a5a;
+    --bubble-agent-bg:   #0a1c11;
     --bubble-agent-text: #e8f5e3;
+    --sidebar-bg:  #040f0a;
     """
 else:
     css_vars = """
@@ -60,8 +61,10 @@ else:
     --border:      #c5d9c0;
     --text:        #1a1a1a;
     --text-muted:  #555;
+    --placeholder: #999;
     --bubble-agent-bg:   #ffffff;
     --bubble-agent-text: #1a1a1a;
+    --sidebar-bg:  #227309;
     """
 
 st.markdown(f"""
@@ -76,8 +79,8 @@ html, body, [class*="css"] {{
 
 /* Sidebar */
 [data-testid="stSidebar"] {{
-    background: var(--green) !important;
-    border-right: 3px solid var(--green2);
+    background: var(--sidebar-bg) !important;
+    border-right: 3px solid var(--green);
 }}
 [data-testid="stSidebar"] * {{ color: #ffffff !important; }}
 [data-testid="stSidebar"] .stRadio label {{
@@ -100,9 +103,6 @@ html, body, [class*="css"] {{
     padding: 16px 24px;
     border-radius: 12px;
     margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
 }}
 .agent-header h2 {{ margin: 0; font-size: 1.4rem; }}
 .agent-header p  {{ margin: 2px 0 0; opacity: 0.82; font-size: 0.88rem; }}
@@ -158,9 +158,13 @@ html, body, [class*="css"] {{
     border-radius: 10px !important;
     font-size: 0.95rem !important;
 }}
+.stTextArea textarea::placeholder {{
+    color: var(--placeholder) !important;
+    opacity: 1 !important;
+}}
 .stTextArea textarea:focus {{
     border-color: var(--green) !important;
-    box-shadow: 0 0 0 2px rgba(34,115,9,0.18) !important;
+    box-shadow: 0 0 0 2px rgba(46,204,64,0.18) !important;
 }}
 
 /* API warning */
@@ -188,17 +192,16 @@ html, body, [class*="css"] {{
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🤖 faIyke Agents")
+    st.markdown("## faIyke Agents")
     st.markdown("---")
 
     options = list(AGENT_META.keys())
-    labels  = [f"{AGENT_META[k]['icon']}  {AGENT_META[k]['label']}" for k in options]
+    labels  = [AGENT_META[k]['label'] for k in options]
     choice  = st.radio("Select Agent", labels, index=options.index(st.session_state.active_agent))
     st.session_state.active_agent = options[labels.index(choice)]
 
     st.markdown("---")
 
-    # Dark mode toggle
     toggle_label = "☀️  Light mode" if dark else "🌙  Dark mode"
     if st.button(toggle_label, use_container_width=True):
         st.session_state.dark_mode = not st.session_state.dark_mode
@@ -206,7 +209,7 @@ with st.sidebar:
 
     st.markdown("---")
 
-    key_status = "✅ API key loaded" if API_KEY else "⚠️ No API key found"
+    key_status = "API key loaded" if API_KEY else "No API key found"
     st.markdown(f"<div style='font-size:0.8rem;opacity:0.85'>{key_status}</div>", unsafe_allow_html=True)
     if not API_KEY:
         st.markdown(
@@ -241,7 +244,6 @@ if not API_KEY:
 # Agent header
 st.markdown(f"""
 <div class="agent-header">
-    <div style="font-size:2rem">{agent_info['icon']}</div>
     <div>
         <h2>{agent_info['label']}</h2>
         <p>{agent_info['desc']}</p>
@@ -261,7 +263,7 @@ with col1:
         ])
         st.markdown(f"<div style='margin-bottom:12px'>Skills: {tags}</div>", unsafe_allow_html=True)
 with col2:
-    if st.button("🗑 Clear"):
+    if st.button("Clear"):
         st.session_state.histories[agent_key] = []
         st.rerun()
 
@@ -282,10 +284,12 @@ with st.container():
                     unsafe_allow_html=True,
                 )
             else:
+                content = re.sub(r'\n{3,}', '\n\n', msg['content'].strip())
+                content = content.replace('\n\n', '<br><br>').replace('\n', '<br>')
                 st.markdown(
                     f"<div class='chat-wrap'>"
-                    f"<div class='msg-label'>{agent_info['icon']} {agent_info['label']}</div>"
-                    f"<div class='msg-agent'>{msg['content']}</div></div>",
+                    f"<div class='msg-label'>{agent_info['label']}</div>"
+                    f"<div class='msg-agent'>{content}</div></div>",
                     unsafe_allow_html=True,
                 )
 
@@ -301,14 +305,14 @@ with st.form("chat_form", clear_on_submit=True):
         disabled=not API_KEY,
     )
     submitted = st.form_submit_button(
-        "Send ➤",
+        "Send",
         use_container_width=True,
         disabled=not API_KEY,
     )
 
 if submitted and user_input.strip() and API_KEY:
     history.append({"role": "user", "content": user_input.strip()})
-    with st.spinner(f"{agent_info['icon']} {agent_info['label']} thinking..."):
+    with st.spinner(f"{agent_info['label']} thinking..."):
         try:
             reply = run_agent(agent_key, history, API_KEY)
             history.append({"role": "assistant", "content": reply})
