@@ -5,7 +5,18 @@ from agents import AGENT_META, run_agent
 
 load_dotenv()
 
-API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+def _get_api_key() -> str:
+    # Local: read from .env
+    key = os.getenv("ANTHROPIC_API_KEY", "")
+    if key:
+        return key
+    # Streamlit Cloud: read from st.secrets
+    try:
+        return st.secrets.get("ANTHROPIC_API_KEY", "")
+    except Exception:
+        return ""
+
+API_KEY = _get_api_key()
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
