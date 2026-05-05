@@ -5,7 +5,9 @@ from agents import AGENT_META, run_agent
 
 load_dotenv()
 
-# ── Page config ──────────────────────────────────────────────────────────────
+API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
+# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="faIyke Agent Dashboard",
     page_icon="🤖",
@@ -16,23 +18,21 @@ st.set_page_config(
 # ── Brand CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* Brand variables */
 :root {
-    --green:  #4B5320;
-    --green2: #6B7B3A;
+    --green:  #227309;
+    --green2: #2e9a0c;
     --white:  #FFFFFF;
-    --bg:     #F5F6F0;
-    --border: #D4D9C4;
+    --bg:     #f4f7f3;
+    --border: #c5d9c0;
 }
 
-/* Global */
 html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
 .stApp { background: var(--bg); }
 
 /* Sidebar */
 [data-testid="stSidebar"] {
     background: var(--green) !important;
-    border-right: 2px solid var(--green2);
+    border-right: 3px solid var(--green2);
 }
 [data-testid="stSidebar"] * { color: var(--white) !important; }
 [data-testid="stSidebar"] .stRadio label {
@@ -45,10 +45,10 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     display: block;
 }
 [data-testid="stSidebar"] .stRadio label:hover {
-    background: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.20);
 }
 
-/* Header bar */
+/* Agent header */
 .agent-header {
     background: var(--green);
     color: var(--white);
@@ -57,12 +57,12 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 .agent-header h2 { margin: 0; font-size: 1.4rem; }
-.agent-header p  { margin: 2px 0 0; opacity: 0.8; font-size: 0.9rem; }
+.agent-header p  { margin: 2px 0 0; opacity: 0.8; font-size: 0.88rem; }
 
-/* Chat messages */
+/* Chat bubbles */
 .msg-user {
     background: var(--green);
     color: var(--white);
@@ -82,27 +82,17 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     max-width: 85%;
     border: 1px solid var(--border);
     word-break: break-word;
+    white-space: pre-wrap;
 }
 .msg-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--green2);
+    font-size: 0.70rem;
+    font-weight: 700;
+    color: var(--green);
     margin-bottom: 4px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
-.chat-wrap { padding: 8px 0; }
-
-/* Input area */
-.stTextArea textarea {
-    border: 2px solid var(--border) !important;
-    border-radius: 10px !important;
-    font-size: 0.95rem !important;
-}
-.stTextArea textarea:focus {
-    border-color: var(--green) !important;
-    box-shadow: 0 0 0 2px rgba(75,83,32,0.15) !important;
-}
+.chat-wrap { padding: 6px 0; }
 
 /* Buttons */
 .stButton > button {
@@ -111,31 +101,32 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     border: none !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
-    padding: 10px 28px !important;
     transition: background 0.2s !important;
 }
-.stButton > button:hover {
-    background: var(--green2) !important;
-}
+.stButton > button:hover { background: var(--green2) !important; }
 
-/* Clear button */
-.clear-btn > button {
-    background: transparent !important;
-    color: var(--green) !important;
-    border: 2px solid var(--green) !important;
-}
-.clear-btn > button:hover {
-    background: var(--green) !important;
-    color: var(--white) !important;
-}
-
-/* API key input */
-.stTextInput input {
+/* Input */
+.stTextArea textarea {
     border: 2px solid var(--border) !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
+    font-size: 0.95rem !important;
+}
+.stTextArea textarea:focus {
+    border-color: var(--green) !important;
+    box-shadow: 0 0 0 2px rgba(34,115,9,0.15) !important;
 }
 
-/* Hide Streamlit branding */
+/* API key warning banner */
+.api-warn {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    color: #78350f;
+}
+
 #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -159,18 +150,22 @@ with st.sidebar:
     st.session_state.active_agent = options[labels.index(choice)]
 
     st.markdown("---")
-    st.markdown("**API Key**")
-    api_key_input = st.text_input(
-        "Anthropic API Key",
-        value=os.getenv("ANTHROPIC_API_KEY", ""),
-        type="password",
-        label_visibility="collapsed",
-        placeholder="sk-ant-...",
+
+    key_status = "✅ API key loaded" if API_KEY else "⚠️ No API key found"
+    st.markdown(
+        f"<div style='font-size:0.8rem;opacity:0.85'>{key_status}</div>",
+        unsafe_allow_html=True,
     )
+    if not API_KEY:
+        st.markdown(
+            "<div style='font-size:0.75rem;opacity:0.7;margin-top:4px'>"
+            "Add ANTHROPIC_API_KEY to dashboard/.env</div>",
+            unsafe_allow_html=True,
+        )
 
     st.markdown("---")
     st.markdown(
-        "<div style='font-size:0.75rem;opacity:0.6;text-align:center'>"
+        "<div style='font-size:0.75rem;opacity:0.55;text-align:center'>"
         "faIyke Multi-Agent System<br>Powered by Claude</div>",
         unsafe_allow_html=True,
     )
@@ -181,7 +176,18 @@ agent_key  = st.session_state.active_agent
 agent_info = AGENT_META[agent_key]
 history    = st.session_state.histories[agent_key]
 
-# Header
+# API key warning
+if not API_KEY:
+    st.markdown("""
+<div class="api-warn">
+    <strong>API key required.</strong> Claude Code Pro and the Anthropic API are separate products.
+    Add your key to <code>dashboard/.env</code>:<br><br>
+    <code>ANTHROPIC_API_KEY=sk-ant-your-key-here</code><br><br>
+    Get a key at <strong>console.anthropic.com</strong>, then restart the dashboard.
+</div>
+""", unsafe_allow_html=True)
+
+# Agent header
 st.markdown(f"""
 <div class="agent-header">
     <div style="font-size:2rem">{agent_info['icon']}</div>
@@ -192,25 +198,24 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Top row: skills tags + clear button
+# Skills + clear
 col1, col2 = st.columns([4, 1])
 with col1:
     skills = AGENT_META[agent_key]["skills"]
     if skills:
         tags = " ".join([
             f"<span style='background:var(--green2);color:#fff;padding:2px 10px;"
-            f"border-radius:20px;font-size:0.75rem;margin-right:4px'>{s}</span>"
+            f"border-radius:20px;font-size:0.74rem;margin-right:4px'>{s}</span>"
             for s in skills
         ])
         st.markdown(f"<div style='margin-bottom:12px'>Skills: {tags}</div>", unsafe_allow_html=True)
 with col2:
-    if st.button("🗑 Clear chat"):
+    if st.button("🗑 Clear"):
         st.session_state.histories[agent_key] = []
         st.rerun()
 
 # Chat history
-chat_container = st.container()
-with chat_container:
+with st.container():
     if not history:
         st.markdown(
             f"<div style='text-align:center;color:#888;padding:40px 0'>"
@@ -236,25 +241,27 @@ with chat_container:
 
 st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
-# Input
+# Input form
 with st.form("chat_form", clear_on_submit=True):
     user_input = st.text_area(
         "Message",
         placeholder=f"Ask {agent_info['label']} something...",
         height=100,
         label_visibility="collapsed",
+        disabled=not API_KEY,
     )
-    submitted = st.form_submit_button("Send ➤", use_container_width=True)
+    submitted = st.form_submit_button(
+        "Send ➤",
+        use_container_width=True,
+        disabled=not API_KEY,
+    )
 
-if submitted and user_input.strip():
-    if not api_key_input:
-        st.error("Add your Anthropic API key in the sidebar.")
-    else:
-        history.append({"role": "user", "content": user_input.strip()})
-        with st.spinner(f"{agent_info['icon']} {agent_info['label']} thinking..."):
-            try:
-                reply = run_agent(agent_key, history, api_key_input)
-                history.append({"role": "assistant", "content": reply})
-            except Exception as e:
-                st.error(f"Error: {e}")
-        st.rerun()
+if submitted and user_input.strip() and API_KEY:
+    history.append({"role": "user", "content": user_input.strip()})
+    with st.spinner(f"{agent_info['icon']} {agent_info['label']} thinking..."):
+        try:
+            reply = run_agent(agent_key, history, API_KEY)
+            history.append({"role": "assistant", "content": reply})
+        except Exception as e:
+            st.error(f"Error: {e}")
+    st.rerun()
