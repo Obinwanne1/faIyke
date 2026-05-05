@@ -15,27 +15,61 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Brand CSS ─────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-:root {
-    --green:  #227309;
-    --green2: #2e9a0c;
-    --white:  #FFFFFF;
-    --bg:     #f4f7f3;
-    --border: #c5d9c0;
-}
+# ── Session state ─────────────────────────────────────────────────────────────
+if "histories" not in st.session_state:
+    st.session_state.histories = {k: [] for k in AGENT_META}
+if "active_agent" not in st.session_state:
+    st.session_state.active_agent = "master-agent"
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
 
-html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
-.stApp { background: var(--bg); }
+dark = st.session_state.dark_mode
+
+# ── Theme vars ────────────────────────────────────────────────────────────────
+if dark:
+    css_vars = """
+    --green:       #2eaa0e;
+    --green2:      #38cc10;
+    --white:       #e8f5e3;
+    --bg:          #111612;
+    --surface:     #1a2118;
+    --border:      #2a3d24;
+    --text:        #e8f5e3;
+    --text-muted:  #7a9870;
+    --bubble-agent-bg:   #1e2b1a;
+    --bubble-agent-text: #e8f5e3;
+    """
+else:
+    css_vars = """
+    --green:       #227309;
+    --green2:      #2e9a0c;
+    --white:       #FFFFFF;
+    --bg:          #f4f7f3;
+    --surface:     #ffffff;
+    --border:      #c5d9c0;
+    --text:        #1a1a1a;
+    --text-muted:  #555;
+    --bubble-agent-bg:   #ffffff;
+    --bubble-agent-text: #1a1a1a;
+    """
+
+st.markdown(f"""
+<style>
+:root {{ {css_vars} }}
+
+html, body, [class*="css"] {{
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+}}
+.stApp {{ background: var(--bg) !important; }}
 
 /* Sidebar */
-[data-testid="stSidebar"] {
+[data-testid="stSidebar"] {{
     background: var(--green) !important;
     border-right: 3px solid var(--green2);
-}
-[data-testid="stSidebar"] * { color: var(--white) !important; }
-[data-testid="stSidebar"] .stRadio label {
+}}
+[data-testid="stSidebar"] * {{ color: #ffffff !important; }}
+[data-testid="stSidebar"] .stRadio label {{
     background: rgba(255,255,255,0.08);
     border-radius: 8px;
     padding: 8px 12px;
@@ -43,39 +77,39 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     cursor: pointer;
     transition: background 0.2s;
     display: block;
-}
-[data-testid="stSidebar"] .stRadio label:hover {
+}}
+[data-testid="stSidebar"] .stRadio label:hover {{
     background: rgba(255,255,255,0.20);
-}
+}}
 
 /* Agent header */
-.agent-header {
+.agent-header {{
     background: var(--green);
-    color: var(--white);
+    color: #ffffff;
     padding: 16px 24px;
     border-radius: 12px;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 14px;
-}
-.agent-header h2 { margin: 0; font-size: 1.4rem; }
-.agent-header p  { margin: 2px 0 0; opacity: 0.8; font-size: 0.88rem; }
+}}
+.agent-header h2 {{ margin: 0; font-size: 1.4rem; }}
+.agent-header p  {{ margin: 2px 0 0; opacity: 0.82; font-size: 0.88rem; }}
 
 /* Chat bubbles */
-.msg-user {
+.msg-user {{
     background: var(--green);
-    color: var(--white);
+    color: #ffffff;
     padding: 12px 16px;
     border-radius: 12px 12px 4px 12px;
     margin: 8px 0;
     max-width: 80%;
     margin-left: auto;
     word-break: break-word;
-}
-.msg-agent {
-    background: var(--white);
-    color: #1a1a1a;
+}}
+.msg-agent {{
+    background: var(--bubble-agent-bg);
+    color: var(--bubble-agent-text);
     padding: 12px 16px;
     border-radius: 12px 12px 12px 4px;
     margin: 8px 0;
@@ -83,60 +117,62 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     border: 1px solid var(--border);
     word-break: break-word;
     white-space: pre-wrap;
-}
-.msg-label {
+}}
+.msg-label {{
     font-size: 0.70rem;
     font-weight: 700;
     color: var(--green);
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-}
-.chat-wrap { padding: 6px 0; }
+}}
+.chat-wrap {{ padding: 6px 0; }}
 
 /* Buttons */
-.stButton > button {
+.stButton > button {{
     background: var(--green) !important;
-    color: var(--white) !important;
+    color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
     transition: background 0.2s !important;
-}
-.stButton > button:hover { background: var(--green2) !important; }
+}}
+.stButton > button:hover {{ background: var(--green2) !important; }}
 
 /* Input */
-.stTextArea textarea {
+.stTextArea textarea {{
+    background: var(--surface) !important;
+    color: var(--text) !important;
     border: 2px solid var(--border) !important;
     border-radius: 10px !important;
     font-size: 0.95rem !important;
-}
-.stTextArea textarea:focus {
+}}
+.stTextArea textarea:focus {{
     border-color: var(--green) !important;
-    box-shadow: 0 0 0 2px rgba(34,115,9,0.15) !important;
-}
+    box-shadow: 0 0 0 2px rgba(34,115,9,0.18) !important;
+}}
 
-/* API key warning banner */
-.api-warn {
-    background: #fff8e1;
+/* API warning */
+.api-warn {{
+    background: {'#1e1a0a' if dark else '#fff8e1'};
     border-left: 4px solid #f59e0b;
     border-radius: 8px;
     padding: 12px 16px;
     margin-bottom: 16px;
     font-size: 0.88rem;
-    color: #78350f;
-}
+    color: {'#f5c842' if dark else '#78350f'};
+}}
 
-#MainMenu, footer { visibility: hidden; }
+/* Empty chat placeholder */
+.chat-empty {{
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px 0;
+}}
+
+#MainMenu, footer {{ visibility: hidden; }}
 </style>
 """, unsafe_allow_html=True)
-
-
-# ── Session state ─────────────────────────────────────────────────────────────
-if "histories" not in st.session_state:
-    st.session_state.histories = {k: [] for k in AGENT_META}
-if "active_agent" not in st.session_state:
-    st.session_state.active_agent = "master-agent"
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -151,11 +187,16 @@ with st.sidebar:
 
     st.markdown("---")
 
+    # Dark mode toggle
+    toggle_label = "☀️  Light mode" if dark else "🌙  Dark mode"
+    if st.button(toggle_label, use_container_width=True):
+        st.session_state.dark_mode = not st.session_state.dark_mode
+        st.rerun()
+
+    st.markdown("---")
+
     key_status = "✅ API key loaded" if API_KEY else "⚠️ No API key found"
-    st.markdown(
-        f"<div style='font-size:0.8rem;opacity:0.85'>{key_status}</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"<div style='font-size:0.8rem;opacity:0.85'>{key_status}</div>", unsafe_allow_html=True)
     if not API_KEY:
         st.markdown(
             "<div style='font-size:0.75rem;opacity:0.7;margin-top:4px'>"
@@ -176,7 +217,6 @@ agent_key  = st.session_state.active_agent
 agent_info = AGENT_META[agent_key]
 history    = st.session_state.histories[agent_key]
 
-# API key warning
 if not API_KEY:
     st.markdown("""
 <div class="api-warn">
@@ -218,8 +258,7 @@ with col2:
 with st.container():
     if not history:
         st.markdown(
-            f"<div style='text-align:center;color:#888;padding:40px 0'>"
-            f"Start a conversation with <strong>{agent_info['label']}</strong></div>",
+            f"<div class='chat-empty'>Start a conversation with <strong>{agent_info['label']}</strong></div>",
             unsafe_allow_html=True,
         )
     else:
