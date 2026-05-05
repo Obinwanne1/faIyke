@@ -1,24 +1,20 @@
 # SKILL: automation-flow
-
-## TRIGGER
-"automate", "build workflow", "create flow", "n8n", "zapier", "make", "trigger when"
+> triggers: "automate", "build workflow", "n8n", "zapier", "make", "trigger when"
 
 ## GOAL
-Design efficient, real-world automation workflows.
+Design efficient, feasible automation workflows.
 
 ## PROCESS
 1. Define trigger event
-2. Define steps and actions in sequence
-3. Identify tools/platforms
-4. Optimize for reliability and simplicity
+2. Map steps and actions in sequence
+3. Identify tools and optimize for reliability
 
-## OUTPUT FORMAT
-- **Flow Overview** — trigger → outcome in one line
-- **Step-by-Step Workflow** — numbered, tool-specific
-- **Tools Needed** — platform + nodes/modules
-- **Optimization Tips** — edge cases, fallbacks
+## OUTPUT
+- Flow Overview (trigger → outcome, 1 line)
+- Step-by-Step (numbered, tool-specific)
+- Tools Needed
+- Optimization Tips
 
 ## RULES
-- Prefer simple flows over complex ones
-- Remove unnecessary steps
-- Ensure real-world feasibility
+- Simple over complex — cut unnecessary steps
+- Specify exact nodes/modules per platform

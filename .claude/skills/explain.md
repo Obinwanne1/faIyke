@@ -1,21 +1,18 @@
 # SKILL: explain
-
-## TRIGGER
-"explain", "teach me", "ELI5", "what is", "how does X work"
+> triggers: "explain", "teach me", "ELI5", "how does X work"
 
 ## GOAL
 Make complex ideas immediately understandable.
 
 ## PROCESS
-1. Simplify concept to core idea
+1. Simplify to core idea
 2. Add analogy if helpful
 3. Give concrete example
 
-## OUTPUT FORMAT
-- **Explanation** — plain language, no jargon
-- **Example** — real, specific, concrete
+## OUTPUT
+- Explanation (plain language)
+- Example (specific, real)
 
 ## RULES
-- No academic tone
-- No unnecessary jargon
+- No jargon unless necessary
 - Short and clear over thorough and long

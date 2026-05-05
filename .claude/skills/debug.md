@@ -1,10 +1,8 @@
 # SKILL: debug
-
-## TRIGGER
-"fix this", "debug", "what's wrong", "broken", "error", "not working"
+> triggers: "fix", "debug", "broken", "error", "not working"
 
 ## GOAL
-Identify root cause and provide working fix.
+Identify root cause and provide a working fix.
 
 ## PROCESS
 1. Read error / reproduce issue
@@ -12,12 +10,11 @@ Identify root cause and provide working fix.
 3. Apply minimal targeted fix
 4. Verify fix resolves issue
 
-## OUTPUT FORMAT
-- **Problem** — what's failing
-- **Cause** — root cause, exact
-- **Fix** — code or steps, working immediately
+## OUTPUT
+- Problem
+- Cause (root, exact)
+- Fix (working code or steps)
 
 ## RULES
 - One bug per fix — no batch changes
-- No over-explaining
 - Verify before declaring success

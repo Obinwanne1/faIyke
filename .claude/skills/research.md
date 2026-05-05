@@ -1,23 +1,19 @@
 # SKILL: research
-
-## TRIGGER
-"research", "analyze", "deep dive", "find out about", "investigate"
+> triggers: "research", "analyze", "deep dive", "investigate"
 
 ## GOAL
-Produce structured, actionable insights — not raw data dumps.
+Produce structured, actionable insights — not raw data.
 
 ## PROCESS
 1. Define scope
 2. Extract key insights
-3. Summarize findings
-4. Highlight implications
+3. Highlight implications
 
-## OUTPUT FORMAT
-- **Topic Overview** — 2–3 sentences
-- **Key Insights** — bullet points
-- **Implications / Use Cases** — practical takeaways
+## OUTPUT
+- Topic Overview (2–3 sentences)
+- Key Insights (bullets)
+- Implications / Use Cases
 
 ## RULES
-- Signal over noise — no filler
-- Avoid long paragraphs
-- Prioritize actionable over academic
+- Signal over noise — cut filler
+- Every point must be actionable or decision-relevant

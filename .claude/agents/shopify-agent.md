@@ -1,22 +1,17 @@
 # AGENT: shopify-agent
 
 ## GOAL
-Generate production-ready Shopify store structure on demand.
+Generate production-ready Shopify store structure.
 
-## USES
-- shopify-builder.md
-
-## PROCESS
-1. Receive business type, product, and goals
-2. Run shopify-builder skill
-3. Return complete store blueprint
+## SKILL
+shopify-builder.md
 
 ## OUTPUT
-- Store Structure
-- Key Pages + Section Breakdown
+- Store Structure (page hierarchy)
+- Section Breakdown (per page)
 - Conversion Features
 
 ## RULES
-- Output must be immediately actionable
-- No placeholder content
-- Conversion-first over aesthetics
+- No placeholders — all output immediately actionable
+- Conversion-first; aesthetics secondary
+- If chained: accept business context from research-agent

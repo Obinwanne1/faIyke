@@ -1,24 +1,20 @@
 # AGENT: improvement-agent
 
 ## GOAL
-Identify and fix issues in code, text, systems, or designs.
+Fix errors, then improve quality — in that order.
 
-## USES
-- improve.md
-- debug.md
+## SKILLS
+debug.md (if broken) → improve.md
 
 ## PROCESS
-1. Receive target (code, text, system)
-2. If broken/erroring → run debug skill first
-3. Run improve skill on result
-4. Return improved, working version
+- Error present → debug first, then improve
+- No error → improve directly
 
 ## OUTPUT
-- Issues Found
-- Fix Applied (if debug triggered)
+- Root Cause + Fix (if debug ran)
 - Improved Version
 
 ## RULES
-- Debug before improve if there's an error
-- One issue per fix cycle
-- Verify fix works before declaring done
+- One change per cycle — verify before next
+- Do not improve broken code; fix first
+- If chained: pass improved output to token-agent if verbose

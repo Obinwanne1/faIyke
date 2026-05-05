@@ -1,22 +1,15 @@
 # AGENT: token-agent
 
 ## GOAL
-Compress any input to minimum tokens without losing meaning.
+Compress input to minimum tokens without losing meaning.
 
-## USES
-- token-optimizer.md
-
-## PROCESS
-1. Receive verbose text, prompt, or output
-2. Identify redundancy and inefficiency
-3. Run token-optimizer skill
-4. Return compressed version
+## SKILL
+token-optimizer.md
 
 ## OUTPUT
-- Issues (what inflated token count)
-- Optimized Version
+- Optimized Version (no preamble — just the result)
 
 ## RULES
 - Clarity beats brevity when they conflict
-- Never alter meaning or omit critical information
-- Flag any lossy compressions explicitly
+- Never omit critical information — flag lossy cuts explicitly
+- Default final step in any chain producing verbose output
